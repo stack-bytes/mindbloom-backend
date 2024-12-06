@@ -27,8 +27,9 @@ services:
       - 6382:6379
 
   # Rabbits
-  aggregation-broker:
-    container_name: aggregation-broker
-    image: rabbitmq
+  rabbit-mq:
+    container_name: rabbit-mq
+    image: rabbitmq:3-management
     ports:
       - 5672:5672
+      - 15672:15672

@@ -2,6 +2,7 @@ package com.stackbytes.controller;
 
 import com.stackbytes.model.dto.EventCreateRequestDto;
 import com.stackbytes.model.dto.EventCreateResponseDto;
+import com.stackbytes.model.dto.MapEventResponseDto;
 import com.stackbytes.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ public class EventController {
         this.eventService = eventService;
     }
 
+    @CrossOrigin
     @PostMapping
     private ResponseEntity<EventCreateResponseDto> createEvent(@RequestBody EventCreateRequestDto eventCreateRequestDto) {
 
@@ -28,6 +30,22 @@ public class EventController {
         return  createdEvent != null ? ResponseEntity.ok(createdEvent) : ResponseEntity.notFound().build();
 
     }
+
+    @CrossOrigin
+    @GetMapping("/map")
+    private ResponseEntity<List<MapEventResponseDto>> getMapEvents(@RequestParam String groupId) {
+
+        List<MapEventResponseDto> mapEventResponseDto =  eventService.getEventsFromGroup(groupId);
+        return mapEventResponseDto != null ? ResponseEntity.ok(mapEventResponseDto) : ResponseEntity.notFound().build();
+
+    }
+
+    @CrossOrigin
+    @PutMapping
+    private ResponseEntity<Boolean> joinEvent(@RequestParam String eventId, @RequestParam String userId){
+        return eventService.addUserToEvent(eventId, userId) ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();
+    }
+
 
 
 

@@ -22,7 +22,8 @@ public class Event {
     private String groupId;
     private Date time;
     private String location;
-    private Tuple<String, String> coordinates;
     private List<EventParticipantRef> eventParticipantRefs;
+    private String coordinate_x;
+    private String coordinate_y;
     private Integer participants;
 }

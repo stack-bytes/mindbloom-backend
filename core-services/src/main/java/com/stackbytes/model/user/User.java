@@ -17,6 +17,7 @@ public class User {
     private String name;
     private Date birthday;
     private String email;
+    private String pfpUrl;
     private List<String> groups;
     private List<String> events;
     private List<String> interests;

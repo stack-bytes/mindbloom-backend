@@ -1,19 +1,25 @@
 package com.stackbytes.model.dto;
 
+import com.stackbytes.model.ref.EventParticipantRef;
+
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
+import org.yaml.snakeyaml.util.Tuple;
 
 import java.util.Date;
+import java.util.List;
 
-@Getter
 @Data
-public class EventCreateRequestDto {
+@AllArgsConstructor
+@Builder
+public class MapEventResponseDto {
+    private String id;
     private String name;
     private String description;
     private Date time;
-    private String groupId;
     private String location;
     private String coordinate_x;
     private String coordinate_y;
+    private Integer participants;
 }
