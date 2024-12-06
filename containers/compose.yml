@@ -32,3 +32,14 @@ services:
     image: rabbitmq
     ports:
       - 5672:5672
+
+  image-bucket:
+    container_name: image-bucket
+    image: minio/minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ACCESS_KEY: rares
+      MINIO_SECRET_KEY: rares2004
+    command: server /data --console-address ":9001"
