@@ -1,0 +1,34 @@
+version: '0.1'
+
+services:
+  # Caches
+  core-cache:
+    container_name: core-cache
+    image: redis
+    ports:
+      - 6379:6379
+
+  image-cache:
+    container_name: image-cache
+    image: redis
+    ports:
+      - 6380:6379
+
+  event-cache:
+    container_name: event-cache
+    image: redis
+    ports:
+      - 6381:6379
+
+  aggregation-cache:
+    container_name: aggregation-cache
+    image: redis
+    ports:
+      - 6382:6379
+
+  # Rabbits
+  aggregation-broker:
+    container_name: aggregation-broker
+    image: rabbitmq
+    ports:
+      - 5672:5672
