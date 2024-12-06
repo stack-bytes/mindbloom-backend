@@ -24,7 +24,6 @@
     <modules>
         <module>core-services</module>
         <module>image-service</module>
-        <module>event-map-service</module>
         <module>aggregation-service</module>
     </modules>
     <scm>
