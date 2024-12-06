@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.UnknownHostException;
+
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -23,7 +25,7 @@ public class UserController {
     }
 
     @PostMapping
-    private ResponseEntity<UserCreateResponseDto> createNewUser(@RequestBody UserCreateRequestDto userCreateRequestDto, HttpServletRequest request) {
+    private ResponseEntity<UserCreateResponseDto> createNewUser(@RequestBody UserCreateRequestDto userCreateRequestDto, HttpServletRequest request) throws UnknownHostException {
         UserCreateResponseDto userCreateResponseDto = userService.createNewUser(userCreateRequestDto, request);
         return userCreateResponseDto != null ? ResponseEntity.ok(userCreateResponseDto) : ResponseEntity.internalServerError().build();
     }
