@@ -48,6 +48,7 @@ public class UserService {
         return new UserCreateResponseDto(addedUser.getUserId());
     }
 
+
     public Boolean deleteUser(String userId){
         Query deleteUserById = Query.query(Criteria.where("_id").is(userId));
         DeleteResult dr =  mongoTemplate.remove(deleteUserById,"users");
