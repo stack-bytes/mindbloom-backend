@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.yaml.snakeyaml.util.Tuple;
 
 import java.util.Date;
 import java.util.List;

@@ -41,9 +41,9 @@ public class EventController {
     }
 
     @CrossOrigin
-    @PutMapping
+    @PatchMapping
     private ResponseEntity<Boolean> joinEvent(@RequestParam String eventId, @RequestParam String userId){
-        return eventService.addUserToEvent(eventId, userId) ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();
+        return eventService.addUserToEvent(eventId, userId)._1() ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();
     }
 
 

@@ -34,11 +34,12 @@ public class UserController {
         return userService.deleteUser(userId) ? ResponseEntity.ok(true) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
     }
     @CrossOrigin
-    @PatchMapping("/events")
+    @PostMapping("/events")
     private ResponseEntity<EventParticipantRefResponseDto> addUserToEvent(@RequestParam String userId, @RequestParam String eventId){
         EventParticipantRefResponseDto eventParticipantRefResponseDto =  userService.addUserEvent(userId, eventId);
         return eventParticipantRefResponseDto != null ? ResponseEntity.ok(eventParticipantRefResponseDto) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
+
     @CrossOrigin
     @GetMapping
     private ResponseEntity<String> sanity(){
