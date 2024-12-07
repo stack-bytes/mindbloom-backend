@@ -6,63 +6,44 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score
 from sklearn.compose import ColumnTransformer
 
-
 dataset = pd.read_csv('Dataset-Mental-Disorders.csv')
+
+dataset.columns = dataset.columns.str.replace(" ", "_")
 
 # Options for the complete display of the dataset
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_colwidth', None)
 pd.set_option('display.expand_frame_repr', False)
 
-dataset.columns = dataset.columns.str.replace(" ", "_")
-
 dataset = dataset.drop('Patient_Number', axis=1)
 
-LABELS = ['Depression', 'Normal', 'Bipolar Type-1', 'Bipolar Type-2']
+dataset['Suicidal_thoughts'] = dataset['Suicidal_thoughts'].replace('YES ', 'YES')
 
-label2id = dict(zip(LABELS, range(len(LABELS))))
+yes_no_cols = ['Mood_Swing', 'Suicidal_thoughts', 'Anorxia', 'Authority_Respect', 'Try-Explanation', 'Aggressive_Response', 'Ignore_&_Move-On', 'Nervous_Break-down', 'Admit_Mistakes', 'Overthinking']
 
-dataset['Expert_Diagnose'] = dataset['Expert_Diagnose'].map(label2id)
+for col in yes_no_cols:
+    dataset[col] = dataset[col].map({'YES': 1, 'NO': 0}).astype(int)
 
-X = dataset.drop('Expert_Diagnose', axis=1)  # Assuming 'Expert_Diagnose' is the target variable
+X = dataset.drop(columns=['Expert_Diagnose'],axis=1)
 y = dataset['Expert_Diagnose']
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3,random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-categorical_variables = X_train.select_dtypes(include = ['object','category']).columns.to_list()
+encoder = OneHotEncoder(handle_unknown='ignore')
+X_train_encoded = encoder.fit_transform(X_train)
+X_test_encoded = encoder.transform(X_test)
 
-# Define the preprocessing steps using ColumnTransformer
-preprocessor = ColumnTransformer([
-    ('ohe', OneHotEncoder(drop='first', sparse_output=False, handle_unknown='ignore'), categorical_variables)
-], remainder='passthrough')
+rf = RandomForestClassifier()
+rf.fit(X_train_encoded, y_train)
 
-# Fit and transform the training data
-X_train_prep = preprocessor.fit_transform(X_train)
-
-print(X_test)
-
-# Transform the testing data
-X_test_prep = preprocessor.transform(X_test)
-
-# Initialize the model
-
-model = RandomForestClassifier()
-
-model.fit(X_train_prep, y_train)
-
-y_pred = model.predict(X_test_prep)
+y_pred = rf.predict(X_test_encoded)
 
 accuracy = accuracy_score(y_test, y_pred)
 
 print(f"Accuracy: {accuracy:.2f}")
 
-print(f"Cross Validation Score: {cross_val_score(model, X_train_prep, y_train, cv=5).mean():.2f}")
+print(f"Cross Validation Score: {cross_val_score(rf, X_train_encoded, y_train, cv=5).mean():.2f}")
 
-# Save the model
+# joblib.dump(rf, 'model.joblib')
 
-joblib.dump(model, 'model.joblib')
-
-# Save the preprocessor
-
-joblib.dump(preprocessor, 'preprocessor.joblib')
+# joblib.dump(encoder, 'preprocessor.joblib')
