@@ -1,5 +1,7 @@
 package com.stackbytes.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.result.UpdateResult;
 import com.stackbytes.model.Event;
 import com.stackbytes.model.dto.EventCreateRequestDto;
@@ -13,6 +15,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -28,16 +31,22 @@ public class EventService {
 
     private final MongoTemplate mongoTemplate;
     private final RabbitTemplate rabbitTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     private final String monolithUsersEventsApi = "http://localhost:8080/users/events";
 
     private final RestTemplate restTemplate;
     @Autowired
-    public EventService(MongoTemplate mongoTemplate, RabbitTemplate rabbitTemplate, RestTemplate restTemplate) {
+    public EventService(MongoTemplate mongoTemplate, RabbitTemplate rabbitTemplate, RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper, RestTemplate restTemplate) {
         this.mongoTemplate = mongoTemplate;
         this.rabbitTemplate = rabbitTemplate;
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
         this.restTemplate = restTemplate;
     }
+
+
 
     public EventCreateResponseDto createEvent(EventCreateRequestDto eventCreateRequestDto) {
         Event newEvent = Event.builder()
@@ -55,6 +64,18 @@ public class EventService {
         //Cache
 
         Event createdEvent = mongoTemplate.insert(newEvent);
+        String stringifiedRedisEvent = null;
+        try{
+            stringifiedRedisEvent = objectMapper.writeValueAsString(createdEvent);
+        } catch (JsonProcessingException e) {
+            System.out.println("Could not add event to LRU cache");
+        }
+
+        assert stringifiedRedisEvent != null;
+        redisTemplate.opsForValue().append(createdEvent.getId(), stringifiedRedisEvent);
+
+
+
 
 
         return new EventCreateResponseDto(createdEvent.getId());
@@ -103,12 +124,14 @@ public class EventService {
            return new Tuple<>(false, null);
        }
 
-       Event e = mongoTemplate.findOne(Query.query(Criteria.where("_id").is(eventId)), Event.class);
+
 
        Query query = Query.query(Criteria.where("_id").is(eventId));
        Update update = new Update().inc("participants", 1);
 
        UpdateResult ur = mongoTemplate.updateFirst(query, update, Event.class);
+
+
 
        if(ur.getModifiedCount() == 0){
            return new Tuple<>(false, null);
@@ -117,16 +140,46 @@ public class EventService {
       update = new Update().addToSet("eventParticipantRefs", epr);
 
        mongoTemplate.updateFirst(query, update, Event.class);
-
+        Event e = mongoTemplate.findOne(Query.query(Criteria.where("_id").is(eventId)), Event.class);
+        try{
+            updateStringTypeValue(eventId, e);
+        } catch (JsonProcessingException er){
+            System.out.println("Could not update event in LRU Cache");
+        }
        return new Tuple<>(true, epr);
     }
 
-    public List<FullEventDto> getEventById(String eventId) {
+    public FullEventDto getEventById(String eventId) {
+
+
+
+        String stringifiedRedisEvent = redisTemplate.opsForValue().get(eventId);
+
+        if(stringifiedRedisEvent != null) {
+            try{
+                Event e = objectMapper.readValue(stringifiedRedisEvent, Event.class);
+                System.out.println("Cached event returned!");
+                return new FullEventDto(e.getId(), e.getName(), e.getDescription(), e.getGroupId(), e.getTime(), e.getLocation(), e.getEventParticipantRefs(), e.getCoordinate_x(), e.getCoordinate_y(), e.getParticipants());
+            } catch (JsonProcessingException e) {
+                System.out.println("Could not parse event from LRU cache");
+            }
+
+        }
+
+
+
+
+
         Query query = Query.query(Criteria.where("_id").is(eventId));
-        List<Event> events = mongoTemplate.find(query, Event.class);
+        Event e = mongoTemplate.findOne(query, Event.class);
 
-        List<FullEventDto> fed =  events.stream().map((e) -> new FullEventDto(e.getId(), e.getName(), e.getDescription(), e.getGroupId(), e.getTime(), e.getLocation(), e.getEventParticipantRefs(), e.getCoordinate_x(), e.getCoordinate_y(), e.getParticipants())).toList();
+        if(e == null){
+            return null;
+        }
 
+
+        FullEventDto fed = new FullEventDto(e.getId(), e.getName(), e.getDescription(), e.getGroupId(), e.getTime(), e.getLocation(), e.getEventParticipantRefs(), e.getCoordinate_x(), e.getCoordinate_y(), e.getParticipants());
+        System.out.println("Non-Cached event returned!");
         return fed;
     }
 
@@ -144,6 +197,7 @@ public class EventService {
 
 
 
+
         Query query = Query.query(Criteria.where("_id").is(eventId));
         Update update = new Update().inc("participants", -1);
         mongoTemplate.updateFirst(query, update, Event.class);
@@ -152,12 +206,26 @@ public class EventService {
 
         Event e = mongoTemplate.findOne(Query.query(Criteria.where("_id").is(eventId)), Event.class);
 
+        try{
+            updateStringTypeValue(eventId, e);
+        } catch (JsonProcessingException er){
+            System.out.println("Could not update event in LRU Cache");
+        }
+
         assert e != null;
         if(e.getParticipants() <= 0){
             deleteEvent(eventId);
+            redisTemplate.opsForValue().getAndDelete(eventId);
         }
 
 
         return ur.getModifiedCount() > 0;
     }
+
+    //TODO: Extract and templatize
+    private <V> void updateStringTypeValue(String key, V value) throws JsonProcessingException {
+        String stringifiedEvent = objectMapper.writeValueAsString(value);
+        redisTemplate.opsForValue().set(key, stringifiedEvent);
+    }
+
 }

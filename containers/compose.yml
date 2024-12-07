@@ -6,17 +6,20 @@ services:
     container_name: core-cache
     image: redis
     ports:
-      - 6379:6379
+      - 6380:6379
 
   image-cache:
     container_name: image-cache
     image: redis
     ports:
-      - 6380:6379
+      - 6382:6379
 
   event-cache:
     container_name: event-cache
-    image: redis
+    image: redis:latest
+    volumes:
+      - ./redis-config/redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     ports:
       - 6381:6379
 
@@ -24,7 +27,7 @@ services:
     container_name: aggregation-cache
     image: redis
     ports:
-      - 6382:6379
+      - 6383:6379
 
   # Rabbits
   rabbit-mq:
