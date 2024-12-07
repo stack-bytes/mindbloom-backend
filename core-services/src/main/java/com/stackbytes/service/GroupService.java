@@ -1,11 +1,14 @@
 package com.stackbytes.service;
 
+import com.mongodb.client.result.UpdateResult;
 import com.stackbytes.model.group.Group;
 import com.stackbytes.model.group.dto.CreateGroupRequestDto;
 import com.stackbytes.model.group.dto.CreateGroupResponseDto;
+import com.stackbytes.model.user.User;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -56,5 +59,38 @@ public class GroupService {
         List<Group> gs = mongoTemplate.find(new Query(Criteria.where("owner").is(therapistId)), Group.class);
 
         return gs.isEmpty() ? null : gs;
+    }
+
+    public boolean addUserToGroup(String userId, String groupId) {
+        Query query = new Query(Criteria.where("_id").is(groupId));
+        Update update = new Update().addToSet("members", userId);
+
+        UpdateResult ur =  mongoTemplate.updateFirst(query, update, Group.class);
+
+        if(ur.getModifiedCount() == 0)
+            return false;
+
+        query = new Query(Criteria.where("_id").is(userId));
+        update = new Update().addToSet("groups", groupId);
+
+        ur =  mongoTemplate.updateFirst(query, update, User.class);
+
+        return ur.getModifiedCount() > 0;
+    }
+
+    public boolean removeUserFromGroup(String userId, String groupId) {
+        Query query = new Query(Criteria.where("_id").is(groupId));
+        Update update = new Update().pull("members", userId);
+
+        UpdateResult ur =  mongoTemplate.updateFirst(query, update, Group.class);
+
+        if(ur.getModifiedCount() == 0)
+            return false;
+
+        query = new Query(Criteria.where("_id").is(userId));
+        update = new Update().pull("groups", groupId);
+        ur =  mongoTemplate.updateFirst(query, update, User.class);
+
+        return ur.getModifiedCount() > 0;
     }
 }

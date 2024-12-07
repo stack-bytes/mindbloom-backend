@@ -38,6 +38,14 @@ public class GroupController {
         return !(gs == null) ? ResponseEntity.ok(gs) : ResponseEntity.notFound().build();
     }
 
+    @PatchMapping("/user/add") ResponseEntity<Boolean> addUserToGroup(@RequestParam String groupId, @RequestParam String userId) {
+        return groupService.addUserToGroup(userId, groupId) ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/user/remove") ResponseEntity<Boolean> removeUserFromGroup(@RequestParam String groupId, @RequestParam String userId) {
+        return  groupService.removeUserFromGroup(userId, groupId) ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();
+    }
+
     @GetMapping("/therapist")
     private ResponseEntity<List<Group>> getTherapistGroups(@RequestParam String therapistId) {
         List<Group> gs = groupService.getTherapistGroups(therapistId);
