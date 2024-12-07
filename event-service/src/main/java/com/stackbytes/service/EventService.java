@@ -34,7 +34,7 @@ public class EventService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
 
-    private final String monolithUsersEventsApi = "http://localhost:8080/users/events";
+    private final String monolithUsersEventsApi = "http://core-services:8081/users/events";
 
     private final RestTemplate restTemplate;
     @Autowired
