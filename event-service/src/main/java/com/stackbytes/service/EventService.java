@@ -4,6 +4,7 @@ import com.mongodb.client.result.UpdateResult;
 import com.stackbytes.model.Event;
 import com.stackbytes.model.dto.EventCreateRequestDto;
 import com.stackbytes.model.dto.EventCreateResponseDto;
+import com.stackbytes.model.dto.FullEventDto;
 import com.stackbytes.model.dto.MapEventResponseDto;
 import com.stackbytes.model.ref.EventParticipantRef;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -12,6 +13,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -78,6 +81,7 @@ public class EventService {
                     .coordinate_y(event.getCoordinate_y())
                     .location(event.getLocation())
                     .description(event.getDescription())
+                    .participantRefs(event.getEventParticipantRefs())
                     .build();
             return mapEventResponseDtoTemp;
         }).toList();
@@ -114,6 +118,34 @@ public class EventService {
 
        mongoTemplate.updateFirst(query, update, Event.class);
 
-       return new Tuple<>(true, null);
+       return new Tuple<>(true, epr);
+    }
+
+    public List<FullEventDto> getEventById(String eventId) {
+        Query query = Query.query(Criteria.where("_id").is(eventId));
+        List<Event> events = mongoTemplate.find(query, Event.class);
+
+        List<FullEventDto> fed =  events.stream().map((e) -> new FullEventDto(e.getId(), e.getName(), e.getDescription(), e.getGroupId(), e.getTime(), e.getLocation(), e.getEventParticipantRefs(), e.getCoordinate_x(), e.getCoordinate_y(), e.getParticipants())).toList();
+
+        return fed;
+    }
+
+    public boolean removeUserFromEvent(String eventId, String userId) {
+       try{
+            ResponseEntity<Void> responseEntity =  restTemplate.exchange(String.format("%s?userId=%s&eventId=%s", monolithUsersEventsApi, userId, eventId), HttpMethod.DELETE, null, Void.class);
+        } catch (Exception e){
+            System.out.println("Could not remove user from event " + e);
+            return false;
+        }
+
+
+
+        Query query = Query.query(Criteria.where("_id").is(eventId));
+        Update update = new Update().inc("participants", -1);
+        mongoTemplate.updateFirst(query, update, Event.class);
+        update = new Update().pull("eventParticipantRefs", new Query(Criteria.where("_id").is(userId)));
+        UpdateResult ur =  mongoTemplate.updateFirst(query, update, Event.class);
+
+        return ur.getModifiedCount() > 0;
     }
 }

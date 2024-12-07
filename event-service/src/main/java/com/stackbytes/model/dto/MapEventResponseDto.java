@@ -22,4 +22,5 @@ public class MapEventResponseDto {
     private String coordinate_x;
     private String coordinate_y;
     private Integer participants;
+    private List<EventParticipantRef> participantRefs;
 }

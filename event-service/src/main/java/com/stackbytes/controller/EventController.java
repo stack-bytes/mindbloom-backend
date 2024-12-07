@@ -2,6 +2,7 @@ package com.stackbytes.controller;
 
 import com.stackbytes.model.dto.EventCreateRequestDto;
 import com.stackbytes.model.dto.EventCreateResponseDto;
+import com.stackbytes.model.dto.FullEventDto;
 import com.stackbytes.model.dto.MapEventResponseDto;
 import com.stackbytes.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,7 @@ public class EventController {
     }
 
     @CrossOrigin
-    @PostMapping
+    @PostMapping("/create")
     private ResponseEntity<EventCreateResponseDto> createEvent(@RequestBody EventCreateRequestDto eventCreateRequestDto) {
 
         EventCreateResponseDto createdEvent = eventService.createEvent(eventCreateRequestDto);
@@ -32,7 +33,13 @@ public class EventController {
     }
 
     @CrossOrigin
-    @GetMapping("/map")
+    @GetMapping("/full-event")
+    public ResponseEntity<List<FullEventDto>> getFullEvent(@RequestParam String eventId){
+        return ResponseEntity.ok(eventService.getEventById(eventId));
+    }
+
+    @CrossOrigin
+    @GetMapping("/map-event")
     private ResponseEntity<List<MapEventResponseDto>> getMapEvents(@RequestParam String groupId) {
 
         List<MapEventResponseDto> mapEventResponseDto =  eventService.getEventsFromGroup(groupId);
@@ -41,9 +48,21 @@ public class EventController {
     }
 
     @CrossOrigin
-    @PatchMapping
+    @PatchMapping("/add-user")
     private ResponseEntity<Boolean> joinEvent(@RequestParam String eventId, @RequestParam String userId){
         return eventService.addUserToEvent(eventId, userId)._1() ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();
+    }
+
+    @CrossOrigin
+    @GetMapping
+    private ResponseEntity<String> snanity(){
+        return ResponseEntity.ok("Event service running!");
+    }
+
+    @CrossOrigin
+    @DeleteMapping("/remove-user")
+    private ResponseEntity<Boolean> removeUserFromEvent(@RequestParam String eventId, @RequestParam String userId){
+        return eventService.removeUserFromEvent(eventId, userId) ? ResponseEntity.ok(true) :  ResponseEntity.notFound().build();
     }
 
 

@@ -2,6 +2,7 @@ package com.stackbytes.model;
 
 
 import com.stackbytes.model.ref.EventParticipantRef;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -13,6 +14,7 @@ import java.util.List;
 @Document(collection = "events")
 @Data
 @Builder
+@AllArgsConstructor
 public class Event {
     @Id
     private String id;

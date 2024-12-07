@@ -87,4 +87,13 @@ public class UserService {
 
         return responseDto;
     }
+
+    public boolean removeEventFromUser(String userId, String eventId) {
+        Query query = Query.query(Criteria.where("_id").is(userId));
+        Update rem = new Update();
+        rem.pull("events", eventId);
+        UpdateResult ur =  mongoTemplate.updateFirst(query, rem, "users");
+
+        return ur.getModifiedCount() > 0;
+    }
 }
