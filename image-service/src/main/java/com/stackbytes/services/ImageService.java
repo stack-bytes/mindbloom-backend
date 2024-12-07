@@ -119,4 +119,51 @@ public class ImageService {
             return InsertImageResponseDto.builder().success(true).message(insertedImage.getId()).build();
         }
     }
+
+    public InsertImageResponseDto insertAvatarImage(MultipartFile multipartFile, String name, boolean reduced) {
+
+        if(multipartFile == null){
+            return InsertImageResponseDto.builder().success(false).message("Multipart file is null").build();
+        }
+
+        String contentType = multipartFile.getContentType();
+
+        if(contentType == null || !contentType.startsWith("image")){
+            return InsertImageResponseDto.builder().success(false).message("Invalid content type").build();
+        }
+
+        Image image = Image.builder().name(name).build();
+        Image insertedImage = mongoTemplate.insert(image);
+
+        if(reduced) {
+            try {
+                MultipartFile reducedImage = reduceSizeService.reduceSize(multipartFile);
+                minioClient.putObject(
+                  PutObjectArgs.builder()
+                          .bucket("avatars-reduced")
+                          .stream(reducedImage.getInputStream(), reducedImage.getSize(), -1)
+                          .contentType(contentType)
+                          .object(insertedImage.getId())
+                            .build()
+                );
+                return InsertImageResponseDto.builder().success(true).message(insertedImage.getId()).build();
+            } catch (Exception e) {
+                return InsertImageResponseDto.builder().success(false).message("Error : " + e.getMessage()).build();
+            }
+        } else {
+            try {
+                minioClient.putObject(
+                  PutObjectArgs.builder()
+                          .bucket("avatars")
+                          .stream(multipartFile.getInputStream(), multipartFile.getSize(), -1)
+                          .contentType(contentType)
+                          .object(insertedImage.getId())
+                            .build()
+                );
+                return InsertImageResponseDto.builder().success(true).message(insertedImage.getId()).build();
+            } catch (Exception e) {
+                return InsertImageResponseDto.builder().success(false).message("Error : " + e.getMessage()).build();
+            }
+        }
+    }
 }

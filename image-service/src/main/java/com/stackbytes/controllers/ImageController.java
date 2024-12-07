@@ -2,6 +2,7 @@ package com.stackbytes.controllers;
 
 import com.stackbytes.models.dto.InsertImageResponseDto;
 import com.stackbytes.services.ImageService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,7 +22,7 @@ public class ImageController {
         if(response.isSuccess()){
             return ResponseEntity.ok(response);
         }
-        return ResponseEntity.badRequest().body(response);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @PostMapping("/insert-reduced")
@@ -30,6 +31,15 @@ public class ImageController {
         if(response.isSuccess()){
             return ResponseEntity.ok(response);
         }
-        return ResponseEntity.badRequest().body(response);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @PostMapping("/insert-avatar")
+    public ResponseEntity<InsertImageResponseDto> insertAvatarImage(@RequestParam("file")MultipartFile file, @RequestParam("name") String name, @RequestParam("reduced") boolean reduced) {
+        InsertImageResponseDto response = imageService.insertAvatarImage(file, name, reduced);
+        if(response.isSuccess()){
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 }
