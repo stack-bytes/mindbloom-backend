@@ -39,6 +39,13 @@ public class EventController {
         return fullEventDto != null ? ResponseEntity.ok(fullEventDto) : ResponseEntity.notFound().build();
     }
 
+    @CrossOrigin
+    @GetMapping("/user/events")
+    public ResponseEntity<List<FullEventDto>> getUserEvents(@RequestParam String userId) {
+        List<FullEventDto> fullEvents = eventService.getUserEvents(userId);
+        return fullEvents != null ? ResponseEntity.ok(fullEvents) : ResponseEntity.notFound().build();
+    }
+
 
 
     @CrossOrigin

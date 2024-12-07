@@ -228,4 +228,12 @@ public class EventService {
         redisTemplate.opsForValue().set(key, stringifiedEvent);
     }
 
+    public List<FullEventDto> getUserEvents(String userId) {
+        Query q = new Query(Criteria.where("eventParticipantRefs").elemMatch(Criteria.where("_id").is(userId)));
+        List<Event> events = mongoTemplate.find(q, Event.class);
+
+        List<FullEventDto> fed =  events.stream().map(e -> new FullEventDto(e.getId(), e.getName(), e.getDescription(), e.getGroupId(), e.getTime(), e.getLocation(), e.getEventParticipantRefs(), e.getCoordinate_x(), e.getCoordinate_y(), e.getParticipants())).toList();
+
+        return fed;
+    }
 }
