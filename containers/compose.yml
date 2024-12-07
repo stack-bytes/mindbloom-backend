@@ -6,32 +6,37 @@ services:
     container_name: core-cache
     image: redis
     ports:
-      - 6379:6379
+      - 6380:6379
 
   image-cache:
     container_name: image-cache
     image: redis
     ports:
-      - 6380:6379
+      - 6382:6379
 
   event-cache:
     container_name: event-cache
-    image: redis
+    image: redis:latest
+    volumes:
+      - ./redis-config/redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     ports:
       - 6381:6379
 
   aggregation-cache:
-    container_name: aggregation-cache
+    container_name: group-cache
     image: redis
     ports:
-      - 6382:6379
+      - 6383:6379
 
   # Rabbits
-  aggregation-broker:
-    container_name: aggregation-broker
-    image: rabbitmq
+  rabbit-mq:
+    container_name: rabbit-mq
+    image: rabbitmq:3-management
     ports:
       - 5672:5672
+      - 15672:15672
+
 
   image-bucket:
     container_name: image-bucket
@@ -43,3 +48,26 @@ services:
       MINIO_ACCESS_KEY: rares
       MINIO_SECRET_KEY: rares2004
     command: server /data --console-address ":9001"
+      
+
+  # Nginx
+  core-services:
+    container_name: core-services
+    build: ../core-services/
+    ports:
+      - "8081:8081"
+  event-service:
+    container_name: event-service
+    build: ../event-service/
+    ports:
+      - "8082:8082"
+
+  nginx-gateway:
+    container_name: nginx-gateway
+    build: ./nginx/
+    ports:
+      - "8080:8080"
+    depends_on:
+      - core-services
+      - event-service
+
