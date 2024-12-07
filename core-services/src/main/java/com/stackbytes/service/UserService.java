@@ -96,4 +96,9 @@ public class UserService {
 
         return ur.getModifiedCount() > 0;
     }
+
+    public User getFullUser(String userId) {
+        User u = mongoTemplate.findOne(Query.query(Criteria.where("_id").is(userId)), User.class);
+        return u;
+    }
 }

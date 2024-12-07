@@ -1,9 +1,12 @@
 package com.stackbytes.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import com.stackbytes.model.user.User;
 import com.stackbytes.model.user.dto.EventParticipantRefResponseDto;
 import com.stackbytes.model.user.dto.UserCreateRequestDto;
 import com.stackbytes.model.user.dto.UserCreateResponseDto;
 import com.stackbytes.service.UserService;
+import com.stackbytes.views.Views;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Null;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,9 +53,14 @@ public class UserController {
         return userService.removeEventFromUser(userId, eventId) ? ResponseEntity.ok(null) : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
 
+
+
+
     @CrossOrigin
-    @GetMapping
-    private ResponseEntity<String> sanity(){
-        return ResponseEntity.ok("Users endpoint working!");
+    @GetMapping("/")
+    @JsonView(Views.Public.class)
+    private ResponseEntity<User> fullUser(@RequestParam String userId){
+        User u =  userService.getFullUser(userId);
+        return u != null ? ResponseEntity.ok(u) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 }
