@@ -37,6 +37,19 @@ services:
       - 5672:5672
       - 15672:15672
 
+
+  image-bucket:
+    container_name: image-bucket
+    image: minio/minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ACCESS_KEY: rares
+      MINIO_SECRET_KEY: rares2004
+    command: server /data --console-address ":9001"
+      
+
   # Nginx
   core-services:
     container_name: core-services
@@ -57,7 +70,4 @@ services:
     depends_on:
       - core-services
       - event-service
-
-
-
 
