@@ -13,6 +13,6 @@ public class CreateGroupRequestDto {
     private String coordinate_x;
     private String coordinate_y;
     private String owner;
-    private List<String> memebers;
+    private List<String> members;
     private Metadata metadata;
 }

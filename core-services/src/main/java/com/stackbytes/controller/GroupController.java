@@ -35,6 +35,13 @@ public class GroupController {
     }
 
     @CrossOrigin
+    @GetMapping("/all")
+    private ResponseEntity<List<Group>> getGroups() {
+        List<Group> gs = groupService.getAllGroups();
+        return !(gs == null) ? ResponseEntity.ok(gs) : ResponseEntity.notFound().build();
+    }
+
+    @CrossOrigin
     @GetMapping("/user")
     private ResponseEntity<List<Group>> getUserGroups(@RequestParam String userId) {
         List<Group> gs = groupService.getUserGroups(userId);

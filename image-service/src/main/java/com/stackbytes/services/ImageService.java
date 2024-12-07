@@ -4,6 +4,7 @@ import com.stackbytes.models.Image;
 import com.stackbytes.models.dto.InsertImageResponseDto;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,11 +15,13 @@ public class ImageService {
     private final MinioClient minioClient;
 
     private final MongoTemplate mongoTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
     private final ReduceSizeService reduceSizeService;
-    public ImageService(MinioClient minioClient, MongoTemplate mongoTemplate, ReduceSizeService reduceSizeService) {
+    public ImageService(MinioClient minioClient, MongoTemplate mongoTemplate, RabbitTemplate rabbitTemplate, ReduceSizeService reduceSizeService) {
         this.minioClient = minioClient;
         this.mongoTemplate = mongoTemplate;
+        this.rabbitTemplate = rabbitTemplate;
         this.reduceSizeService = reduceSizeService;
     }
 
@@ -116,6 +119,7 @@ public class ImageService {
             } catch (Exception e) {
                 return InsertImageResponseDto.builder().success(false).message("Error : " + e.getMessage()).build();
             }
+
             return InsertImageResponseDto.builder().success(true).message(insertedImage.getId()).build();
         }
     }
@@ -146,6 +150,7 @@ public class ImageService {
                           .object(insertedImage.getId())
                             .build()
                 );
+
                 return InsertImageResponseDto.builder().success(true).message(insertedImage.getId()).build();
             } catch (Exception e) {
                 return InsertImageResponseDto.builder().success(false).message("Error : " + e.getMessage()).build();

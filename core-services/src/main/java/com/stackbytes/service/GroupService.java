@@ -1,6 +1,5 @@
 package com.stackbytes.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.result.UpdateResult;
 import com.stackbytes.model.group.Group;
@@ -42,7 +41,7 @@ public class GroupService {
                 .created_at(new Date())
                 .updated_at(new Date())
                 .owner(createGroupRequestDto.getOwner())
-                .members(createGroupRequestDto.getMemebers() == null ? new ArrayList<>() : createGroupRequestDto.getMemebers())
+                .members(createGroupRequestDto.getMembers() == null ? new ArrayList<>() : createGroupRequestDto.getMembers())
                 .avatarUrl("")
                 .coordinate_x(createGroupRequestDto.getCoordinate_x())
                 .coordinate_y(createGroupRequestDto.getCoordinate_y())
@@ -134,6 +133,11 @@ public class GroupService {
             return mongoTemplate.findOne(new Query(Criteria.where("_id").is(id)), Group.class);
         }).toList();
 
+        return groups;
+    }
+
+    public List<Group> getAllGroups() {
+        List<Group> groups = mongoTemplate.findAll(Group.class);
         return groups;
     }
 }
