@@ -16,6 +16,7 @@ public class ImageController {
         this.imageService = imageService;
     }
 
+    @CrossOrigin
     @PostMapping("/insert")
     public ResponseEntity<InsertImageResponseDto> insertImage(@RequestParam("file")MultipartFile file, @RequestParam("name") String name, @RequestParam("isProfilePicture") boolean isProfilePicture){
         InsertImageResponseDto response = imageService.insertImage(file, name, isProfilePicture);
@@ -25,6 +26,7 @@ public class ImageController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    @CrossOrigin
     @PostMapping("/insert-reduced")
     public ResponseEntity<InsertImageResponseDto> insertReducedImage(@RequestParam("file")MultipartFile file, @RequestParam("name") String name, @RequestParam("isProfilePicture") boolean isProfilePicture) {
         InsertImageResponseDto response = imageService.insertReducedImage(file, name, isProfilePicture);
@@ -34,6 +36,7 @@ public class ImageController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    @CrossOrigin
     @PostMapping("/insert-avatar")
     public ResponseEntity<InsertImageResponseDto> insertAvatarImage(@RequestParam("file")MultipartFile file, @RequestParam("name") String name, @RequestParam("reduced") boolean reduced) {
         InsertImageResponseDto response = imageService.insertAvatarImage(file, name, reduced);
