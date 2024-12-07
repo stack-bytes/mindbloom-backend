@@ -130,6 +130,10 @@ public class EventService {
         return fed;
     }
 
+    private void deleteEvent(String eventId){
+        mongoTemplate.remove(Query.query(Criteria.where("_id").is(eventId)), Event.class);
+    }
+
     public boolean removeUserFromEvent(String eventId, String userId) {
        try{
             ResponseEntity<Void> responseEntity =  restTemplate.exchange(String.format("%s?userId=%s&eventId=%s", monolithUsersEventsApi, userId, eventId), HttpMethod.DELETE, null, Void.class);
@@ -145,6 +149,14 @@ public class EventService {
         mongoTemplate.updateFirst(query, update, Event.class);
         update = new Update().pull("eventParticipantRefs", new Query(Criteria.where("_id").is(userId)));
         UpdateResult ur =  mongoTemplate.updateFirst(query, update, Event.class);
+
+        Event e = mongoTemplate.findOne(Query.query(Criteria.where("_id").is(eventId)), Event.class);
+
+        assert e != null;
+        if(e.getParticipants() <= 0){
+            deleteEvent(eventId);
+        }
+
 
         return ur.getModifiedCount() > 0;
     }
