@@ -8,26 +8,30 @@ import com.stackbytes.model.user.dto.UserCreateRequestDto;
 import com.stackbytes.model.user.dto.UserCreateResponseDto;
 import com.stackbytes.utils.CountryUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class UserService {
 
     private final MongoTemplate mongoTemplate;
     private final CountryUtils countryUtils;
+    private final RabbitTemplate rabbitTemplate;
 
-    public UserService(MongoTemplate mongoTemplate, CountryUtils countryUtils) {
+    public UserService(MongoTemplate mongoTemplate, CountryUtils countryUtils, RabbitTemplate rabbitTemplate) {
         this.mongoTemplate = mongoTemplate;
         this.countryUtils = countryUtils;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     public UserCreateResponseDto createNewUser(UserCreateRequestDto userCreateRequestDto, HttpServletRequest request) throws UnknownHostException {
@@ -100,5 +104,26 @@ public class UserService {
     public User getFullUser(String userId) {
         User u = mongoTemplate.findOne(Query.query(Criteria.where("_id").is(userId)), User.class);
         return u;
+    }
+
+    public boolean addUserInterest(String userId, List<String> interest) {
+
+        Query q = Query.query(Criteria.where("_id").is(userId));
+        Update update = new Update();
+        AtomicReference<Integer> aa = new AtomicReference<>(0);
+        interest.stream().forEach(interesto -> {
+            update.addToSet("interests", interesto);
+            rabbitTemplate.convertAndSend("interests", interesto);
+            aa.updateAndGet(v -> Math.toIntExact(v + mongoTemplate.updateFirst(q, update, "users").getModifiedCount()));
+        });
+
+        return aa.get() > 0;
+    }
+
+    public boolean removeUserInterest(String userId, String interest) {
+        Query q = Query.query(Criteria.where("_id").is(userId));
+        Update update = new Update();
+        update.pull("interests", interest);
+        return  mongoTemplate.updateFirst(q, update, "users").getModifiedCount() > 0;
     }
 }

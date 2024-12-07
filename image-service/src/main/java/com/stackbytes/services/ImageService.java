@@ -1,6 +1,9 @@
 package com.stackbytes.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stackbytes.models.Image;
+import com.stackbytes.models.RabbitMqPfp;
 import com.stackbytes.models.dto.InsertImageResponseDto;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
@@ -14,14 +17,19 @@ public class ImageService {
 
     private final MinioClient minioClient;
 
+    //Add Gateway
+    private final String minioUrl = "http://localhost:9000/avatars-reduced/";
+
     private final MongoTemplate mongoTemplate;
     private final RabbitTemplate rabbitTemplate;
+    private final ObjectMapper objectMapper;
 
     private final ReduceSizeService reduceSizeService;
-    public ImageService(MinioClient minioClient, MongoTemplate mongoTemplate, RabbitTemplate rabbitTemplate, ReduceSizeService reduceSizeService) {
+    public ImageService(MinioClient minioClient, MongoTemplate mongoTemplate, RabbitTemplate rabbitTemplate, ObjectMapper objectMapper, ReduceSizeService reduceSizeService) {
         this.minioClient = minioClient;
         this.mongoTemplate = mongoTemplate;
         this.rabbitTemplate = rabbitTemplate;
+        this.objectMapper = objectMapper;
         this.reduceSizeService = reduceSizeService;
     }
 
@@ -49,6 +57,20 @@ public class ImageService {
                           .object(insertedImage.getId())
                             .build()
                 );
+
+                try{
+                    RabbitMqPfp rabbitMqPfp = RabbitMqPfp.builder()
+                                    .id(String.format("%s%s", minioUrl, insertedImage.getId()))
+                                            .name(name)
+                                                    .build();
+
+                    String sf = objectMapper.writeValueAsString(rabbitMqPfp);
+                    rabbitTemplate.convertAndSend( "pfp", sf);
+                    System.out.println("Message sent");
+                } catch ( JsonProcessingException e) {
+                    return InsertImageResponseDto.builder().success(false).message(e.getMessage()).build();
+                }
+
             } catch (Exception e) {
                 return InsertImageResponseDto.builder().success(false).message("Error : " + e.getMessage()).build();
             }
@@ -65,6 +87,19 @@ public class ImageService {
                           .object(insertedImage.getId())
                             .build()
                 );
+
+                try{
+                    RabbitMqPfp rabbitMqPfp = RabbitMqPfp.builder()
+                            .id(String.format("%s%s", minioUrl, insertedImage.getId()))
+                            .name(name)
+                            .build();
+
+                    String sf = objectMapper.writeValueAsString(rabbitMqPfp);
+                    rabbitTemplate.convertAndSend( "pfp", sf);
+                    System.out.println("Message sent");
+                } catch ( JsonProcessingException e) {
+                    return InsertImageResponseDto.builder().success(false).message(e.getMessage()).build();
+                }
             } catch (Exception e) {
                 return InsertImageResponseDto.builder().success(false).message("Error : " + e.getMessage()).build();
             }

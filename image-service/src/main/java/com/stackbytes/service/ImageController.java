@@ -1,4 +1,4 @@
-package com.stackbytes.controllers;
+package com.stackbytes.service;
 
 import com.stackbytes.models.dto.InsertImageResponseDto;
 import com.stackbytes.services.ImageService;

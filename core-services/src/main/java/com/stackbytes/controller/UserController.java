@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.UnknownHostException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -51,6 +52,18 @@ public class UserController {
     @DeleteMapping("/events")
     private ResponseEntity<Null> removeUserFromEvent(@RequestParam String userId, @RequestParam String eventId){
         return userService.removeEventFromUser(userId, eventId) ? ResponseEntity.ok(null) : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+
+    @CrossOrigin
+    @PostMapping("/interests")
+    private ResponseEntity<Boolean> addInteres(@RequestParam String userId, @RequestParam List<String> interest){
+        return userService.addUserInterest(userId, interest) ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();
+    }
+
+    @CrossOrigin
+    @DeleteMapping("/interests")
+    private ResponseEntity<Boolean> removeInterest(@RequestParam String userId, @RequestParam String interest){
+        return userService.removeUserInterest(userId, interest) ? ResponseEntity.ok(true) : ResponseEntity.notFound().build();
     }
 
 
