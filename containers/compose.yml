@@ -28,6 +28,9 @@ services:
     image: redis
     ports:
       - 6383:6379
+    depends_on:
+      - rabbit-mq
+      - core-services
 
   # Rabbits
   rabbit-mq:
@@ -38,7 +41,7 @@ services:
       - 15672:15672
     volumes:
       - ./rabbit-storage:/var/lib/rabbitmq
-      
+
       
   image-bucket:
     container_name: image-bucket
@@ -75,6 +78,8 @@ services:
     build: ../image-service/
     ports:
       - "8085:8085"
+
+
 
 
 

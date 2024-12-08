@@ -113,6 +113,7 @@ public class UserService {
         AtomicReference<Integer> aa = new AtomicReference<>(0);
         interest.stream().forEach(interesto -> {
             update.addToSet("interests", interesto);
+
             rabbitTemplate.convertAndSend("interests", interesto);
             aa.updateAndGet(v -> Math.toIntExact(v + mongoTemplate.updateFirst(q, update, "users").getModifiedCount()));
         });

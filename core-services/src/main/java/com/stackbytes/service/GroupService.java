@@ -126,12 +126,17 @@ public class GroupService {
                 })
                 .collect(Collectors.toSet());
 
-
-        //MONOG Fallback /\
+        if(groupIds.isEmpty())
+            return null;
 
         List<Group> groups = groupIds.stream().map((id)->{
             return mongoTemplate.findOne(new Query(Criteria.where("_id").is(id)), Group.class);
         }).toList();
+
+        if(groups.isEmpty())
+            return null;
+
+
 
         return groups;
     }

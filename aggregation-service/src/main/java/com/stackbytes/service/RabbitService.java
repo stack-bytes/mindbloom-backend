@@ -11,7 +11,7 @@ import java.time.Instant;
 @Service
 public class RabbitService {
 
-    String INTEREST_KEY = "interest:";
+
 
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -21,12 +21,12 @@ public class RabbitService {
 
     private void addTimedInterest(String interest){
         long timestamp = Instant.now().toEpochMilli();
-        redisTemplate.opsForZSet().add(INTEREST_KEY, interest, timestamp);
+        redisTemplate.opsForValue().set(String.valueOf(timestamp), interest);
     }
 
-    @RabbitListener(queues = "interests")
+    @RabbitListener(queues = "interests",  autoStartup = "true", containerFactory = "rabbitListenerContainerFactory")
     public void receive(String message) {
-        System.out.println("Received: " + message);
+        System.out.println("Received: " + Instant.now().toEpochMilli() + message);
         addTimedInterest(message);
     }
 }
